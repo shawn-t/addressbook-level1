@@ -36,6 +36,10 @@ import java.util.Set;
  **/
 public class AddressBook {
 
+    // class variable
+    private static int AddressBookCount = 0; // class variable
+
+
     /**
      * Default file path used if the user doesn't provide the file name.
      */
@@ -98,6 +102,8 @@ public class AddressBook {
     private static final String PERSON_STRING_REPRESENTATION = "%1$s " // name
                                                             + PERSON_DATA_PREFIX_PHONE + "%2$s " // phone
                                                             + PERSON_DATA_PREFIX_EMAIL + "%3$s"; // email
+
+    private static final String COMMAND_LENGTH_WORD = "length";
     private static final String COMMAND_ADD_WORD = "add";
     private static final String COMMAND_ADD_DESC = "Adds a person to the address book.";
     private static final String COMMAND_ADD_PARAMETERS = "NAME "
@@ -212,7 +218,6 @@ public class AddressBook {
         processProgramArgs(args);
         loadDataFromStorage();
 
-        System.out.print("|| My first commit\n");
         while (true) {
             String userCommand = getUserInput();
             echoUserCommand(userCommand);
@@ -372,6 +377,8 @@ public class AddressBook {
         final String commandType = commandTypeAndParams[0];
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
+        case COMMAND_LENGTH_WORD:
+            return Integer.toString(getAddressBookCount());
         case COMMAND_ADD_WORD:
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
@@ -1167,4 +1174,16 @@ public class AddressBook {
         return new ArrayList<>(Arrays.asList(toSplit.trim().split("\\s+")));
     }
 
+    public static int getAddressBookCount() {
+        return AddressBookCount;
+    }
+
+    public static void setAddressBookCount(int flag) {
+        if (flag == -1) {
+            AddressBook.AddressBookCount--;
+        }
+        if (flag == 1) {
+            AddressBook.AddressBookCount++;
+        }
+    }
 }
