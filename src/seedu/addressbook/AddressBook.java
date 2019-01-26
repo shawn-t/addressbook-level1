@@ -69,6 +69,7 @@ public class AddressBook {
      * at which java String.format(...) method can insert values.
      * =========================================================================
      */
+    private static final String MESSAGE_ADDRESSBOOK_LENGTH = "Length of the address book is %1$d"; // My string for length
     private static final String MESSAGE_ADDED = "New person added: %1$s, Phone: %2$s, Email: %3$s";
     private static final String MESSAGE_ADDRESSBOOK_CLEARED = "Address book has been cleared!";
     private static final String MESSAGE_COMMAND_HELP = "%1$s: %2$s";
@@ -103,7 +104,11 @@ public class AddressBook {
                                                             + PERSON_DATA_PREFIX_PHONE + "%2$s " // phone
                                                             + PERSON_DATA_PREFIX_EMAIL + "%3$s"; // email
 
+    // my addition to the output of list of commands when an invalid command is entered
     private static final String COMMAND_LENGTH_WORD = "length";
+    private static final String COMMAND_LENGTH_DESC = "Returns length of the address book.";
+    private static final String COMMAND_LENGTH_EXAMPLE = "length";
+
     private static final String COMMAND_ADD_WORD = "add";
     private static final String COMMAND_ADD_DESC = "Adds a person to the address book.";
     private static final String COMMAND_ADD_PARAMETERS = "NAME "
@@ -378,7 +383,7 @@ public class AddressBook {
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
         case COMMAND_LENGTH_WORD:
-            return Integer.toString(getAddressBookCount());
+            return executeGetAddressBookLength();
         case COMMAND_ADD_WORD:
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
@@ -422,9 +427,18 @@ public class AddressBook {
      * Adds a person (specified by the command args) to the address book.
      * The entire command arguments string is treated as a string representation of the person to add.
      *
-     * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
+    //=====================================================================================================
+    // My implemenetation for get length
+    private static String executeGetAddressBookLength() {
+        String s = Integer.toString(getAddressBookCount());
+//        return s;
+//        return Integer.toString(ALL_PERSONS.size());
+        return String.format(MESSAGE_ADDRESSBOOK_LENGTH, ALL_PERSONS.size());
+
+    }
+    //=====================================================================================================
     private static String executeAddPerson(String commandArgs) {
         // try decoding a person from the raw args
         final Optional<String[]> decodeResult = decodePersonFromString(commandArgs);
@@ -448,6 +462,8 @@ public class AddressBook {
      * @return successful add person feedback message
      */
     private static String getMessageForSuccessfulAddPerson(String[] addedPerson) {
+        // My addition to increment length if valid
+        setAddressBookCount(1);
         return String.format(MESSAGE_ADDED,
                 getNameFromPerson(addedPerson), getPhoneFromPerson(addedPerson), getEmailFromPerson(addedPerson));
     }
@@ -459,6 +475,7 @@ public class AddressBook {
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
+    //=====================================================================================================
     private static String executeFindPersons(String commandArgs) {
         final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
         final ArrayList<String[]> personsFound = getPersonsWithNameContainingAnyKeyword(keywords);
@@ -509,6 +526,7 @@ public class AddressBook {
      * @param commandArgs full command args string from the user
      * @return feedback display message for the operation result
      */
+    //=====================================================================================================
     private static String executeDeletePerson(String commandArgs) {
         if (!isDeletePersonArgsValid(commandArgs)) {
             return getMessageForInvalidCommandInput(COMMAND_DELETE_WORD, getUsageInfoForDeleteCommand());
@@ -531,6 +549,9 @@ public class AddressBook {
     private static boolean isDeletePersonArgsValid(String rawArgs) {
         try {
             final int extractedIndex = Integer.parseInt(rawArgs.trim()); // use standard libraries to parse
+            // My addition to decrement length if valid
+            if (extractedIndex >= DISPLAYED_INDEX_OFFSET)
+                setAddressBookCount(-1);
             return extractedIndex >= DISPLAYED_INDEX_OFFSET;
         } catch (NumberFormatException nfe) {
             return false;
@@ -573,8 +594,11 @@ public class AddressBook {
      *
      * @return feedback display message for the operation result
      */
+    //=====================================================================================================
     private static String executeClearAddressBook() {
         clearAddressBook();
+        // My addition to update length
+        setAddressBookCount(0);
         return MESSAGE_ADDRESSBOOK_CLEARED;
     }
 
@@ -583,6 +607,7 @@ public class AddressBook {
      *
      * @return feedback display message for the operation result
      */
+    //=====================================================================================================
     private static String executeListAllPersonsInAddressBook() {
         ArrayList<String[]> toBeDisplayed = getAllPersonsInAddressBook();
         showToUser(toBeDisplayed);
@@ -592,6 +617,7 @@ public class AddressBook {
     /**
      * Requests to terminate the program.
      */
+    //=====================================================================================================
     private static void executeExitProgramRequest() {
         exitProgram();
     }
@@ -1092,13 +1118,19 @@ public class AddressBook {
 
     /** Returns usage info for all commands */
     private static String getUsageInfoForAllCommands() {
-        return getUsageInfoForAddCommand() + LS
+        return getUsageInfoForLengthCommand() + LS // include this line of information when printing help list
+                + getUsageInfoForAddCommand() + LS
                 + getUsageInfoForFindCommand() + LS
                 + getUsageInfoForViewCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
                 + getUsageInfoForClearCommand() + LS
                 + getUsageInfoForExitCommand() + LS
                 + getUsageInfoForHelpCommand();
+    }
+    /** Returns the string for showing 'add' command usage instruction */
+    private static String getUsageInfoForLengthCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_LENGTH_WORD, COMMAND_LENGTH_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_LENGTH_EXAMPLE) + LS;
     }
 
     /** Returns the string for showing 'add' command usage instruction */
@@ -1184,6 +1216,9 @@ public class AddressBook {
         }
         if (flag == 1) {
             AddressBook.AddressBookCount++;
+        }
+        if (flag == 0) {
+            AddressBook.AddressBookCount = 0;
         }
     }
 }
